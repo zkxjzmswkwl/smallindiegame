@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/scape
+scape.so
+scape.dylib
+scape.dll
+scape.a
+scape.lib
+scape-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst
