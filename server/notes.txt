@@ -1,0 +1,8 @@
+Start of game server 
+
+
+- Need
+	- Socket logic
+		- Packet structure
+		- Packet factory (?)
+	- Game structures (commons project?)
