@@ -4,7 +4,7 @@ import equipment;
 void main()
 {
 	const auto specialAttack = new SpecialAttack(
-		1,		// id
+		1,      // id
 		0.0,	// chargeRate
 		0.0,	// chargeCost
 		"null",	// name
