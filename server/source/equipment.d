@@ -25,6 +25,8 @@ enum ItemType
 }
 
 // Structs are copied by value in D, so these are classes.
+// Meaning if we mutate a class instance after passing it somewhere else,
+// we're going to have a bad time.
 class Stats
 {
 	short meleeDefense;
@@ -142,7 +144,7 @@ class Weapon : Item
 		return this.range;
 	}
 	/*-------------------------*/
-	SpecialAttack getSpecial() const
+	SpecialAttack getSpecial() 
 	{
 		return this.specialAttack;
 	}
