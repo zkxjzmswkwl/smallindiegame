@@ -1,6 +1,8 @@
 import std.stdio;
+import window;
 
 void main()
 {
-	writeln("Edit source/app.d to start your project.");
+	Window window = new Window();
+	window.test();
 }

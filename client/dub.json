@@ -3,6 +3,10 @@
 		"zkxjzmswkwl"
 	],
 	"copyright": "Copyright © 2023, zkxjzmswkwl",
+	"dependencies": {
+		"raylib-d": "~>4.5.1"
+	},
+	"libs": ["raylib"],
 	"description": "game",
 	"license": "mit",
 	"name": "scape"
