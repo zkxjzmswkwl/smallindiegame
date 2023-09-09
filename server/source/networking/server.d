@@ -1,9 +1,10 @@
 module networking.server;
 
 import std.stdio;
-import core.thread;
-import std.algorithm.searching;
+import std.array;
 import std.socket;
+import std.algorithm;
+import core.thread;
 
 import networking.packet;
 
@@ -31,21 +32,23 @@ private:
 	{
 		// Fairly certain I need to append the listening socket??
 		readSet.add(socket);
-		foreach (ref client; clients)
+		for (int i = 0; i < clients.length; i++)
 		{
 			// Add each client to the readset. I don't get why still?
-			readSet.add(client);
+			readSet.add(clients[i]);
 			// if the new client's state is invalid, move on.
-			if (!readSet.isSet(client))
+			if (!readSet.isSet(clients[i]))
 				continue;
 
 			// I *think* this does not copy?
 			// From my understanding it ends up being a reference.
-			auto byteCount = client.receive(tmpBuffer[]);
+			auto byteCount = clients[i].receive(tmpBuffer[]);
 			if (byteCount == Socket.ERROR)
 			{
-				client.close();
-				writeln("Connection error, client closed.");
+				clients[i].close();
+				// This should work no????
+				clients = clients.remove(i);
+				writeln("Connection error, client closed: ", byteCount);
 				continue;
 			}
 			// 0 bytes received and no error = client's gone
@@ -59,7 +62,9 @@ private:
 			// That being said, because it's a reference, 
 			// it's not guaranteed have the lifetime we may expect or need.
 			// so .dup is necessary, I *think*.
-			auto packet = new Packet(tmpBuffer.dup, byteCount);
+			auto packet = new Packet(tmpBuffer.dup, cast(ushort)byteCount);
+			packet.print();
+			packet.printBytes();
 			// Again - I'm still unsure why I'm meant to be using these at all?
 			readSet.reset();
 		}
