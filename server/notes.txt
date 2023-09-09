@@ -1,11 +1,16 @@
-Start of game server 
+MAP
+	- | Not started
+	+ | Done
+	> | Working on it
 
 
 - Need
-	- Socket logic
-		- Packet structure
-		- Packet factory (?)
-	- Game structures (commons project?)
+	+ Socket logic
+		+ Packet structure
+	> Game structures (commons project?)
+	- Port over the encryption routines and session logic from the Odin codebase.
+	- Make a commons lib
+		- Move everything that should be in commons to commons
 
 
 Server thread outline
@@ -16,3 +21,5 @@ Server thread outline
   d's messaging protocol to pass them to the `World` thread.
 * The `World` thread then processes those messages and invokes the corresponding logic for each.
 * ....profit?
+
+
