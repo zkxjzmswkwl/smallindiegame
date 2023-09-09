@@ -9,7 +9,12 @@ Need serialization/deserialization for obvious reasons.
 	"packets": [
 		{
 			"opcode": 1,
-			"size": 6
+			"size": 6,
+			"paramByteSizes": [
+				2, 	// Short
+				2, 	// Short
+				4, 	// Integer 
+			]
 		},
 		{
 			"opcode": 2,
@@ -17,6 +22,17 @@ Need serialization/deserialization for obvious reasons.
 		},
 	]
 */
+
+// testing
+struct ReceivedPacket
+{
+	char[1024] buffer;
+	ubyte opcode;
+	ubyte size;
+	ubyte[] paramByteSizes;
+}
+// - testing
+
 class Packet
 {
 private:
@@ -85,4 +101,26 @@ public:
 		buffer[++offset - 1] = cast(ubyte)(val >> 8);
 		buffer[++offset - 1] = cast(ubyte)(val);
 	}
+
+	ubyte readByte()
+	{
+		offset++;
+		return buffer[offset - 1] & 0xFF;
+	}
+	
+	ushort readShort()
+	{
+		offset += 2;
+		return ((buffer[offset - 2] & 0xFF) << 8) + (buffer[offset - 1] & 0xFF);
+	}
+
+	int readInt()
+	{
+		offset += 4;
+		return 
+			((buffer[offset - 4] & 0xFF) << 24) +
+			((buffer[offset - 3] & 0xFF) << 16) + 
+			((buffer[offset - 2] & 0xFF) << 8)  + (buffer[offset - 1] & 0xFF);
+	}
+
 }

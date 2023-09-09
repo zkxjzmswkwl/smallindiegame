@@ -1,9 +1,11 @@
 import std.stdio;
-import core.thread;
+
+import std.conv : to;
+import std.concurrency;
 import equipment;
 import networking.server;
 
-void main()
+void testEquipmentShit()
 {
 	// Testing  
 	auto specialAttack = new SpecialAttack(
@@ -16,12 +18,25 @@ void main()
 
 	const auto testSword = new Weapon(69, 100, specialAttack);
 	writeln(testSword.getDamage());
+}
 
-	// Testing crude packet intake
+void main()
+{
+	/* 
+	 * `Server` loop runs on main thread
+	 * `Server` instantiation results in the creation and subsequent running of `World` thread.
+	 * `Server` loop receives incoming messages, deserializes them into `Packet` objects and uses 
+	   d's messaging protocol to pass them to the `World` thread.
+	 * The `World` thread then processes those messages and invokes the corresponding logic for each.
+	 * ....profit?
+	*/
 	auto server = new Server();
-	while (1)
+	if (!server.loadConfiguration())
 	{
-		server.process();
-		Thread.sleep(dur!("msecs")(25));
+		writeln("Server could not load configuration file and will not start.");
+		return;
 	}
+	server.loadWorld();
+	auto serverTid = server.id;
+	server.start();
 }

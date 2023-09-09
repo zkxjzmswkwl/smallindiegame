@@ -1,12 +1,15 @@
 module networking.server;
 
+import std.conv : to;
 import std.stdio;
 import std.array;
 import std.socket;
 import std.algorithm;
+import std.concurrency;
 import core.thread;
 
 import networking.packet;
+import game.world;
 
 class Server : Thread
 {
@@ -15,8 +18,26 @@ private:
 	SocketSet readSet;
 	SocketSet writeSet;
 	SocketSet errorSet;
+	//
+	// World object instantiated and thread started upon server config load.
+	//
+	World world;
+	//
+	// Tid object for World thread. Needed to send messages to it.
+	//
+	Tid worldTid;
+	//
+	// All connected clients socket. ?? english
+	//
 	Socket[] clients;
+	//
+	// Reference to current incoming packet buffer
+	//
 	char[1024] tmpBuffer;
+	//
+	// When set to false, the server will close.
+	//
+	bool shouldProcess;
 
 	void processNewClients()
 	{
@@ -62,9 +83,17 @@ private:
 			// That being said, because it's a reference, 
 			// it's not guaranteed have the lifetime we may expect or need.
 			// so .dup is necessary, I *think*.
+
+			// This is test nuke 
 			auto packet = new Packet(tmpBuffer.dup, cast(ushort)byteCount);
-			packet.print();
-			packet.printBytes();
+			// this shared cast feels like an illegal maneuver no?
+			send(this.worldTid, cast(shared)packet);
+			// - 
+
+
+			// call out to some logic that identifies packet type and calls out to corresponding logic
+			// TODO - implement that.
+
 			// Again - I'm still unsure why I'm meant to be using these at all?
 			readSet.reset();
 		}
@@ -73,6 +102,16 @@ private:
 	void processSent()
 	{
 		// Not implemented
+	}
+
+	void run()
+	{
+		while(shouldProcess)
+		{
+			processNewClients();
+			processReceived();
+			processSent();
+		}
 	}
 public:
 	this()
@@ -84,12 +123,39 @@ public:
 		this.socket.listen(25);
 		// 500 being the initial capacity.
 		this.readSet = new SocketSet(500);
+		// Flip if you want to kill the server.
+		this.shouldProcess = true;
+		super(&run);
 	}
 
-	void process()
+	bool loadConfiguration()
 	{
-		processNewClients();
-		processReceived();
-		processSent();
+		// Not yet implemented
+		return true;
+	}
+
+	// Probably make this a void later. not sure yet. World might have config too.
+	bool loadWorld()
+	{
+		this.world = new World(thisTid);
+
+		// test remove later
+		this.world.start();
+
+		// this is giga retarded no?
+		bool hasWorldTid = false;
+		while (!hasWorldTid)
+		{
+			receive(
+				(Tid tid) {
+					this.worldTid = tid;
+					writeln("World TID:\t" ~ to!string(tid));
+					hasWorldTid = true;
+				}
+			);
+		}
+
+
+		return true;
 	}
 }

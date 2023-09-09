@@ -1,3 +1,5 @@
+module game.vec;
+
 struct Vec3 {
 	long x;
 	long y;
