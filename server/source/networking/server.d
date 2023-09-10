@@ -1,15 +1,26 @@
 module networking.server;
 
-import std.conv : to;
+import std.file;
 import std.stdio;
 import std.array;
 import std.socket;
+import std.conv : to;
 import std.algorithm;
 import std.concurrency;
 import core.thread;
 
+import dackson;
 import networking.packet;
 import game.world;
+
+struct ServerConfig
+{
+	string host;
+	ushort port;
+	ushort tickRate;
+	int backlog;
+	int setCapacity;
+}
 
 class Server : Thread
 {
@@ -18,6 +29,10 @@ private:
 	SocketSet readSet;
 	SocketSet writeSet;
 	SocketSet errorSet;
+	//
+	// Configuration, brought in from disk.
+	//
+	ServerConfig config;
 	//
 	// World object instantiated and thread started upon server config load.
 	//
@@ -113,35 +128,47 @@ private:
 			processSent();
 		}
 	}
+
+	bool loadConfiguration()
+	{
+		try
+		{
+			auto configContents = readText("serverconfig.json");
+			this.config = decodeJson!(ServerConfig)(configContents);
+			writeln(this.config.host, ",", this.config.port, ",", this.config.tickRate, ",", this.config.setCapacity, ",", this.config.backlog);
+			return true;
+		}
+		catch (FileException e)
+		{
+			writeln("Could not open serverconfig.json. The server will not start.");
+			return false;
+		}
+	}
 public:
 	this()
 	{
+		// meh.
+		this.loadConfiguration();
+
 		this.socket = new TcpSocket();
-		this.socket.bind(new InternetAddress(3195));
+		this.socket.bind(new InternetAddress(this.config.port));
 		// Weird thing, the docs on listen aren't very clear.
 		// I think they meant that it's the maximum amount of queued connections?
-		this.socket.listen(25);
+		this.socket.listen(this.config.backlog);
 		// 500 being the initial capacity.
-		this.readSet = new SocketSet(500);
+		this.readSet = new SocketSet(this.config.setCapacity);
 		// Flip if you want to kill the server.
 		this.shouldProcess = true;
 		super(&run);
 	}
 
-	bool loadConfiguration()
-	{
-		// Not yet implemented
-		return true;
-	}
 
 	// Probably make this a void later. not sure yet. World might have config too.
 	bool loadWorld()
 	{
 		this.world = new World(thisTid);
-
 		// test remove later
 		this.world.start();
-
 		// this is giga retarded no?
 		bool hasWorldTid = false;
 		while (!hasWorldTid)
@@ -154,7 +181,6 @@ public:
 				}
 			);
 		}
-
 
 		return true;
 	}

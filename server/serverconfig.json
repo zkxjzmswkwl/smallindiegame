@@ -1,0 +1,7 @@
+{
+	"host": "localhost",
+	"port": 3195,
+	"tickRate": 600,
+	"backlog": 25,
+	"setCapacity": 500
+}

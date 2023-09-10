@@ -31,11 +31,6 @@ void main()
 	 * ....profit?
 	*/
 	auto server = new Server();
-	if (!server.loadConfiguration())
-	{
-		writeln("Server could not load configuration file and will not start.");
-		return;
-	}
 	server.loadWorld();
 	auto serverTid = server.id;
 	server.start();

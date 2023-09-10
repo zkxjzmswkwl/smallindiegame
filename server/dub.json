@@ -3,7 +3,9 @@
 		"zkxjzmswkwl"
 	],
 	"copyright": "Copyright © 2023, zkxjzmswkwl",
-	"dependencies": {},
+	"dependencies": {
+		"dackson": "~>0.2.1"
+	},
 	"description": "server",
 	"license": "mit",
 	"name": "server"
