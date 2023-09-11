@@ -22,13 +22,35 @@ struct ServerConfig
 	int setCapacity;
 }
 
+struct MessageDescriptor
+{
+	ubyte opcode;
+	ubyte[] paramSizeOrder;
+}
+
 class Server : Thread
 {
 private:
+	MessageDescriptor[] messageDescriptions = [
+		// The idea is that you'll be able to infer
+		//   - param count
+		//   - param sizes
+		//   - param order
+		MessageDescriptor(
+		0x1,		// Opcode
+		[
+			0x2,	// Short
+			0x2,	// Short
+			0x4		// int
+		]),
+		MessageDescriptor(0x2, [0x4, 0x4, 0x2]),
+		MessageDescriptor(0x3, [0x2, 0x4]),
+		MessageDescriptor(0x4, [0x4]),
+	];
 	TcpSocket socket;
 	SocketSet readSet;
 	SocketSet writeSet;
-	SocketSet errorSet;
+	SocketSet serverSet;
 	//
 	// Configuration, brought in from disk.
 	//
@@ -48,69 +70,60 @@ private:
 	//
 	// Reference to current incoming packet buffer
 	//
-	char[1024] tmpBuffer;
+	ubyte[1024] tmpBuffer;
 	//
 	// When set to false, the server will close.
 	//
 	bool shouldProcess;
+	//
+	// Total amount of bytes the server had read this session.
+	//
+	long totalBytesRead;
 
 	void processNewClients()
 	{
-		if (readSet.isSet(socket))
-		{
-			Socket newClient = socket.accept();
-			clients ~= newClient;
-			writeln("New client");
-		}
+		// if (readSet.isSet(socket))
+		// {
+		// 	Socket newClient = socket.accept();
+		// 	clients ~= newClient;
+		// 	writeln("New client");
+		// }
 	}
 
 	void processReceived()
 	{
-		// Fairly certain I need to append the listening socket??
-		readSet.add(socket);
-		for (int i = 0; i < clients.length; i++)
+		this.serverSet.reset();
+		this.readSet.reset();
+		this.serverSet.add(this.socket);
+
+		// Accept new clients
+		auto selectNew = Socket.select(this.serverSet, null, null);
+		if (selectNew > 0)
 		{
-			// Add each client to the readset. I don't get why still?
-			readSet.add(clients[i]);
-			// if the new client's state is invalid, move on.
-			if (!readSet.isSet(clients[i]))
+			auto newClient = this.socket.accept();
+			clients ~= newClient;
+			writeln("New client has connected: ", newClient.remoteAddress());
+		}
+
+		foreach (client; this.clients)
+			this.readSet.add(client);
+
+		auto readNew = Socket.select(this.readSet, null, null);
+		if (readNew < 1)
+			return;
+
+		foreach (ref client; clients)
+		{
+			if (!readSet.isSet(client))
 				continue;
 
-			// I *think* this does not copy?
-			// From my understanding it ends up being a reference.
-			auto byteCount = clients[i].receive(tmpBuffer[]);
-			if (byteCount == Socket.ERROR)
+			auto recv = client.receive(this.tmpBuffer);
+			if (recv > 0)
 			{
-				clients[i].close();
-				// This should work no????
-				clients = clients.remove(i);
-				writeln("Connection error, client closed: ", byteCount);
-				continue;
+				foreach (ref c; tmpBuffer[0 .. recv])
+					printf("%02hhX ", c);
+				printf("\n");
 			}
-			// 0 bytes received and no error = client's gone
-			// TODO: Test whether or not this is zero if the client's
-			// simply not responding.
-			if (byteCount == 0)
-			{
-				writeln("Client has terminated connection.");
-				continue;
-			}
-			// That being said, because it's a reference, 
-			// it's not guaranteed have the lifetime we may expect or need.
-			// so .dup is necessary, I *think*.
-
-			// This is test nuke 
-			auto packet = new Packet(tmpBuffer.dup, cast(ushort)byteCount);
-			// this shared cast feels like an illegal maneuver no?
-			send(this.worldTid, cast(shared)packet);
-			// - 
-
-
-			// call out to some logic that identifies packet type and calls out to corresponding logic
-			// TODO - implement that.
-
-			// Again - I'm still unsure why I'm meant to be using these at all?
-			readSet.reset();
 		}
 	}
 
@@ -135,7 +148,6 @@ private:
 		{
 			auto configContents = readText("serverconfig.json");
 			this.config = decodeJson!(ServerConfig)(configContents);
-			writeln(this.config.host, ",", this.config.port, ",", this.config.tickRate, ",", this.config.setCapacity, ",", this.config.backlog);
 			return true;
 		}
 		catch (FileException e)
@@ -151,17 +163,18 @@ public:
 		this.loadConfiguration();
 
 		this.socket = new TcpSocket();
+		this.socket.blocking = false;
 		this.socket.bind(new InternetAddress(this.config.port));
 		// Weird thing, the docs on listen aren't very clear.
 		// I think they meant that it's the maximum amount of queued connections?
 		this.socket.listen(this.config.backlog);
 		// 500 being the initial capacity.
 		this.readSet = new SocketSet(this.config.setCapacity);
+		this.serverSet = new SocketSet(this.config.setCapacity);
 		// Flip if you want to kill the server.
 		this.shouldProcess = true;
 		super(&run);
 	}
-
 
 	// Probably make this a void later. not sure yet. World might have config too.
 	bool loadWorld()
@@ -170,6 +183,7 @@ public:
 		// test remove later
 		this.world.start();
 		// this is giga retarded no?
+		// Once I learn more about the messaging system in D I'm sure this will change.
 		bool hasWorldTid = false;
 		while (!hasWorldTid)
 		{
@@ -181,7 +195,6 @@ public:
 				}
 			);
 		}
-
 		return true;
 	}
 }

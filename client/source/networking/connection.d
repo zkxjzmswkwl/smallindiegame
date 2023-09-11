@@ -43,10 +43,22 @@ class Connection : Thread
 	private void run()
 	{
 		test();
-		for (int i = 0; i <= 100; i++) {
+		int offset = 0;
+		ubyte[1024] buffer;
+		buffer[++offset - 1] = cast(ubyte)(0x1);	// byte
+		buffer[++offset - 1] = cast(ubyte)(0xA);	// byte
+		buffer[++offset - 1] = cast(ubyte)(0x69);
+		buffer[++offset - 1] = cast(ubyte)(0x69);	// short
+		buffer[++offset - 1] = cast(ubyte)(0x69);
+		buffer[++offset - 1] = cast(ubyte)(0x72);	// short
+		buffer[++offset - 1] = cast(ubyte)(0x12);
+		buffer[++offset - 1] = cast(ubyte)(0x42);
+		buffer[++offset - 1] = cast(ubyte)(0x32);
+		buffer[++offset - 1] = cast(ubyte)(0x22);	// int
+		// 10 bytes total
+		for (int i = 0; i <= 1; i++) {
 			writeln(i);
-			this.socket.send("lo");
+			this.socket.send(buffer[0 .. 10]);
 		}
-		writeln("i'm gay.");
 	}
 }

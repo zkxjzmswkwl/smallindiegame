@@ -21,5 +21,4 @@ Server thread outline
   d's messaging protocol to pass them to the `World` thread.
 * The `World` thread then processes those messages and invokes the corresponding logic for each.
 * ....profit?
-
-
+- Add easily distuingishable packet header

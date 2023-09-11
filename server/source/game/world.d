@@ -34,8 +34,7 @@ private:
 				// ??? why is this allowed?
 				// It works??
 				auto a = cast(Packet) packet;
-				a.print();
-				a.printBytes();
+//				a.printBytes();
 			},
 			(CancelMessage m) {
 				writeln("Processing stopped.");
