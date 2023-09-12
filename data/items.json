@@ -1,0 +1,74 @@
+{
+	"items": [
+		{
+			"id": 1,
+			"name": "Coins",
+			"stackable": true
+		},
+		{
+			"id": 2,
+			"name": "Leather Coif",
+			"stackable": false
+		},
+		{
+			"id": 3,
+			"name": "Leather Body",
+			"stackable": false
+		},
+		{
+			"id": 4,
+			"name": "Leather Gloves",
+			"stackable": false
+		},
+		{
+			"id": 5,
+			"name": "Leather Chaps",
+			"stackable": false
+		},
+		{
+			"id": 6,
+			"name": "Shortbow",
+			"stackable": false
+		},
+		{
+			"id": 7,
+			"name": "Brass Arrow",
+			"stackable": true
+		},
+		{
+			"id": 8,
+			"name": "Bronze Arrow",
+			"stackable": true
+		},
+		{
+			"id": 9,
+			"name": "Copper Arrow",
+			"stackable": true
+		},
+		{
+			"id": 10,
+			"name": "Electrum Arrow",
+			"stackable": true
+		},
+		{
+			"id": 11,
+			"name": "Steel Arrow",
+			"stackable": true
+		},
+		{
+			"id": 12,
+			"name": "Gold Arrow",
+			"stackable": true
+		},
+		{
+			"id": 13,
+			"name": "Platinum Arrow",
+			"stackable": true
+		},
+		{
+			"id": 14,
+			"name": "Obsidian Arrow",
+			"stackable": true
+		}
+	]
+}
